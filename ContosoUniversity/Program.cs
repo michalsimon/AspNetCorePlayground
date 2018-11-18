@@ -22,6 +22,8 @@
                 try
                 {
                     var context = services.GetRequiredService<SchoolContext>();
+                    // using ContosoUniversity.Data; 
+                    DbInitializer.Initialize(context);
                     context.Database.EnsureCreated();
                 }
                 catch (Exception ex)
