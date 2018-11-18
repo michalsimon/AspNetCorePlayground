@@ -33,10 +33,36 @@ namespace ContosoUniversity.Pages.Students
                 return Page();
             }
 
-            _context.Student.Add(Student);
-            await _context.SaveChangesAsync();
+            var emptyStudent = new Student();
 
-            return RedirectToPage("./Index");
+            if (await TryUpdateModelAsync<Student>(
+                    emptyStudent,
+                    "student",   // Prefix for form value.
+                    s => s.FirstMidName, s => s.LastName, s => s.EnrollmentDate))
+            {
+                _context.Student.Add(emptyStudent);
+                await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
+            }
+
+            return null;
         }
+
+        // metoda z view modelem
+        //[BindProperty]
+        //public StudentVM StudentVM { get; set; }
+
+        //public async Task<IActionResult> OnPostAsync()
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return Page();
+        //    }
+
+        //    var entry = _context.Add(new Student());
+        //    entry.CurrentValues.SetValues(StudentVM); // dopasowuje wartości po nazwie
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToPage("./Index");
+        //}
     }
 }
