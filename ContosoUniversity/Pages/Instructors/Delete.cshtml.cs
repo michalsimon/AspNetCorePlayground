@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using ContosoUniversity.Models;
-
-namespace ContosoUniversity.Pages.Instructors
+﻿namespace ContosoUniversity.Pages.Instructors
 {
+    using System.Linq;
+    using System.Threading.Tasks;
+
+    using ContosoUniversity.Models;
+
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Mvc.RazorPages;
+    using Microsoft.EntityFrameworkCore;
+
     public class DeleteModel : PageModel
     {
-        private readonly ContosoUniversity.Models.SchoolContext _context;
+        private readonly SchoolContext _context;
 
-        public DeleteModel(ContosoUniversity.Models.SchoolContext context)
+        public DeleteModel(SchoolContext context)
         {
             _context = context;
         }
@@ -34,24 +34,24 @@ namespace ContosoUniversity.Pages.Instructors
             {
                 return NotFound();
             }
+
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            Instructor instructor = await _context.Instructors
+                                        .Include(i => i.CourseAssignments)
+                                        .SingleAsync(i => i.ID == id);
 
-            Instructor = await _context.Instructors.FindAsync(id);
+            var departments = await _context.Departments
+                                  .Where(d => d.InstructorID == id)
+                                  .ToListAsync();
+            departments.ForEach(d => d.InstructorID = null);
 
-            if (Instructor != null)
-            {
-                _context.Instructors.Remove(Instructor);
-                await _context.SaveChangesAsync();
-            }
+            _context.Instructors.Remove(instructor);
 
+            await _context.SaveChangesAsync();
             return RedirectToPage("./Index");
         }
     }
