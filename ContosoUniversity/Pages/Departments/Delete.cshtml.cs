@@ -10,49 +10,64 @@
 
     public class DeleteModel : PageModel
     {
-        private readonly ContosoUniversity.Models.SchoolContext _context;
+        private readonly SchoolContext _context;
 
-        public DeleteModel(ContosoUniversity.Models.SchoolContext context)
+        public DeleteModel(SchoolContext context)
         {
-            this._context = context;
+            _context = context;
         }
 
         [BindProperty]
         public Department Department { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public string ConcurrencyErrorMessage { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(int id, bool? concurrencyError)
         {
-            if (id == null)
+            Department = await _context.Departments
+                             .Include(d => d.Administrator)
+                             .AsNoTracking()
+                             .FirstOrDefaultAsync(m => m.DepartmentID == id);
+
+            if (Department == null)
             {
-                return this.NotFound();
+                return NotFound();
             }
 
-            this.Department = await this._context.Departments
-                .Include(d => d.Administrator).FirstOrDefaultAsync(m => m.DepartmentID == id);
-
-            if (this.Department == null)
+            if (concurrencyError.GetValueOrDefault())
             {
-                return this.NotFound();
+                ConcurrencyErrorMessage = "The record you attempted to delete "
+                                          + "was modified by another user after you selected delete. "
+                                          + "The delete operation was canceled and the current values in the "
+                                          + "database have been displayed. If you still want to delete this "
+                                          + "record, click the Delete button again.";
             }
-            return this.Page();
+
+            return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int? id)
+        public async Task<IActionResult> OnPostAsync(int id)
         {
-            if (id == null)
+            try
             {
-                return this.NotFound();
+                if (await _context.Departments.AnyAsync(
+                        m => m.DepartmentID == id))
+                {
+                    // Department.rowVersion value is from when the entity
+                    // was fetched. If it doesn't match the DB, a
+                    // DbUpdateConcurrencyException exception is thrown.
+                    _context.Departments.Remove(Department);
+                    await _context.SaveChangesAsync();
+                }
+
+                return RedirectToPage("./Index");
             }
-
-            this.Department = await this._context.Departments.FindAsync(id);
-
-            if (this.Department != null)
+            catch (DbUpdateConcurrencyException)
             {
-                this._context.Departments.Remove(this.Department);
-                await this._context.SaveChangesAsync();
+                return RedirectToPage(
+                    "./Delete",
+                    new { concurrencyError = true, id = id });
             }
-
-            return this.RedirectToPage("./Index");
         }
     }
 }
