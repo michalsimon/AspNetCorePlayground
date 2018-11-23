@@ -23,10 +23,10 @@
                 @Html.DisplayNameFor(model => model.Department[0].StartDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Department[0].RowVersion)
+                @Html.DisplayNameFor(model => model.Department[0].Administrator)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Department[0].Administrator)
+                @Html.DisplayNameFor(model => model.Department[0].RowVersion)
             </th>
             <th></th>
         </tr>
@@ -44,10 +44,10 @@
                 @Html.DisplayFor(modelItem => item.StartDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.RowVersion)
+                @Html.DisplayFor(modelItem => item.Administrator.FullName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Administrator.FirstMidName)
+                @Html.DisplayFor(modelItem => item.RowVersion[7])
             </td>
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.DepartmentID">Edit</a> |
